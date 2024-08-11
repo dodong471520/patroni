@@ -1,0 +1,59 @@
+master:
+initdb
+pg_controldata F:/ruanjian/project/github/postgres/etcd/data1/pg
+postgres --describe-config
+['postgres', '-D', 'F:/ruanjian/project/github/postgres/etcd/data1/pg', '--config-file=F:\\rua...resql.conf', '--listen_addresses=0.0.0.0', '--port=5301', '--cluster_name=batman', '--wal_level=replica', '--hot_standby=on', '--max_connections=100', '--max_wal_senders=10', '--max_prepared_transactions=0', '--max_locks_per_transaction=64', '--track_commit_timestamp=off', ...]
+['pg_isready', '-p', '5301', '-d', 'postgres', '-h', 'localhost', '-U', 'postgres']
+
+replicator:
+['pg_basebackup', '--pgdata=F:/ruanjian/project/github/postgres/etcd/data2/pg', '-X', 'stream', '--dbname=dbname=postgres user=replicator host=127.0.0.1 port=5301', '--verbose', '--max-rate=100M']
+['postgres', '-D', 'F:/ruanjian/project/github/postgres/etcd/data2/pg', '--config-file=F:\\ruanjian\\project\\github\\postgres\\etcd\\data2\\pg\\postgresql.conf', '--listen_addresses=0.0.0.0', '--port=5302', '--cluster_name=batman', '--wal_level=replica', '--hot_standby=on', '--max_connections=100', '--max_wal_senders=10', '--max_prepared_transactions=0', '--max_locks_per_transaction=64', '--track_commit_timestamp=off', '--max_replication_slots=10', '--max_worker_processes=8', '--wal_log_hints=on']
+['pg_isready', '-p', '5302', '-d', 'postgres', '-h', 'localhost', '-U', 'postgres']
+pg_controldata F:/ruanjian/project/github/postgres/etcd/data2/pg
+
+无etcd, 无文件夹, 无进程:
+master:
+initdb, bootstrap, start
+
+replicator:
+bootstrap, follow
+
+有etcd, 有文件夹, 无进程:
+master:
+state -> start, running,
+recover, follow, promote
+
+replicator:
+state -> starting
+clone, follow
+
+无etcd, 有文件夹, 无进程:
+master:
+role -> master, demoted, replica, master,
+recover, follow, promote
+
+replicator:
+role -> replica, promoted, master, 
+state -> stopped, starting, running, 
+recover, follow, promote
+
+有etcd, 有文件夹, 有进程:
+master:
+state -> stopped, starting, running
+recover, follow
+
+无etcd, 有文件夹, 有进程:
+master:
+state -> starting, start failed, starting, running
+recover, follow, promote
+
+杀死master:
+replica:
+promote
+
+restaring:
+state: restarting
+stop, start, 
+
+switchover:
+demote, follow, 

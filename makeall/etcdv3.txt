@@ -1,0 +1,58 @@
+
+///////////////////////////////////////////
+
+etcd:
+GET:/version
+{}
+{"etcdserver":"3.5.15","etcdcluster":"3.5.0"}
+
+POST:/v3/cluster/member/list
+{}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","raft_term":"3"},"members":[{"ID":"708162861580590150","name":"etcd1","peerURLs":["http://127.0.0.1:2381"],"clientURLs":["http://127.0.0.1:2301"]},{"ID":"11422760369413494203","name":"etcd2","peerURLs":["http://127.0.0.1:2382"],"clientURLs":["http://127.0.0.1:2302"]}]}
+
+POST:/v3/kv/range
+{"key": "/service/batman/", "range_end": "/service/batman0", "serializable": true}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"194","raft_term":"3"}}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"245","raft_term":"3"},"kvs":[{"key":"/service/batman/initialize","create_revision":"243","mod_revision":"243","version":"1"}],"count":"1"}
+
+POST:/v3/watch
+{"create_request": {"key": "/service/batman/", "range_end": "/service/batman0", "start_revision": "296", "filters": []}}
+
+POST:/v3/lease/keepalive
+{"ID": "2037475325347931001"}
+{"result":{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"205","raft_term":"3"} ,"ID":"2037475325347931001"}}
+
+POST:/v3/lease/grant
+{"TTL": 30}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"187","raft_term":"3"},"ID":"2037475325347930891","TTL":"30"}
+
+POST:/v3/kv/put
+{"key": "/service/batman/members/postgresql1", "value": "{"conn_url":"postgres://127.0.0.1:5301/postgres","api_url":"http://127.0.0.1:8001/patroni","state":"stopped","role":"uninitialized","version":"3.3.2"}", "lease": "2037475325347930975"}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"195","raft_term":"3"}}
+{"key": "/service/batman/config", "value": "{"ttl":30,"loop_wait":10,"retry_timeout":10,"maximum_lag_on_failover":1048576,"postgresql":{"use_pg_rewind":true,"pg_hba":["host replication replicator 0.0.0.0/0 md5","host all all 0.0.0.0/0 md5"],"parameters":null}}"}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"533","raft_term":"5"}}
+{"key": "/service/batman/leader", "value": "postgresql1"}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"541","raft_term":"5"}}
+{"key": "/service/batman/status", "value": "{"optime":25584504}"}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"673","raft_term":"5"}}
+{"key": "/service/batman/failover", "value": "{"leader":"postgresql1","member":"postgresql2"}"}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"2219","raft_term":"9"}}
+
+POST:/v3/kv/txn
+{"compare": [{"target": "CREATE", "create_revision": "0", "key": "/service/batman/initialize"}], "success": [{"request_put": {"key": "/service/batman/initialize", "value": ""}}]}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"197","raft_term":"3"},"succeeded":true,"responses":[{"response_put":{"header":{"revision":"197"}}}]}
+{"compare": [{"target": "CREATE", "create_revision": "0", "key": "/service/batman/initialize"}], "success": [{"request_put": {"key": "/service/batman/initialize", "value": "7398935720447782400"}}]}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"532","raft_term":"5"}}
+{"compare": [{"key": "/service/batman/leader", "target": "VALUE", "value": "postgresql1"}], "success": [{"request_put": {"key": "/service/batman/leader", "value": "postgresql1", "lease": "2037475366625385518"}}], "failure": [{"request_txn": {"compare": [{"key": "/service/batman/leader", "target": "CREATE", "create_revision": "0"}], "success": [{"request_put": {"key": "/service/batman/leader", "value": "postgresql1", "lease": "2037475366625385518"}}]}}]}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"752","raft_term":"5"},"responses":[{"response_txn":{"header":{},"succeeded":true,"responses":[{"response_put":{"header":{"revision":"752"}}}]}}]}
+{"compare": [{"key": "/service/batman/leader", "target": "VALUE", "value": "postgresql1"}], "success": [{"request_delete_range": {"key": "/service/batman/leader"}}]}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"2518","raft_term":"9"}}
+
+POST:/v3/kv/deleterange
+{"key": "/service/batman/", "range_end": "/service/batman0"}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"2701","raft_term":"10"},"deleted":"8"}
+
+GET:/liveness
+
+
+

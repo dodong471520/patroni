@@ -1,0 +1,74 @@
+master:
+state:'initializing new cluster',starting,running
+_role:'uninitialized','master'
+
+state: master, demoted
+
+replicator:
+state:creating replica,stopped,starting
+_role:'uninitialized'
+
+///////////////////////////////////////////
+initdb,bootstrap,start,post_bootstrap
+bootstrap,start
+
+
+//////////////////////////////////////////////
+日志状态:
+SELECT CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE ('x' || pg_catalog.substr(pg_catalog.pg_walfile_name(pg_catalog.pg_current_wal_lsn()), 1, 8))::bit(32)::int END, CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_current_wal_flush_lsn(), '0/0')::bigint END, pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_last_wal_replay_lsn(), '0/0')::bigint, pg_catalog.pg_wal_lsn_diff(COALESCE(pg_catalog.pg_last_wal_receive_lsn(), '0/0'), '0/0')::bigint, pg_catalog.pg_is_in_recovery() AND pg_catalog.pg_is_wal_replay_paused(), 0, CASE WHEN latest_end_lsn IS NULL THEN NULL ELSE received_tli END, slot_name, conninfo, status, pg_catalog.current_setting('restore_command'), (SELECT pg_catalog.json_agg(s.*) FROM (SELECT slot_name, slot_type as type, datoid::bigint, plugin, catalog_xmin, pg_catalog.pg_wal_lsn_diff(confirmed_flush_lsn, '0/0')::bigint AS confirmed_flush_lsn, pg_catalog.pg_wal_lsn_diff(restart_lsn, '0/0')::bigint AS restart_lsn FROM pg_catalog.pg_get_replication_slots()) AS s), 'on', '', NULL FROM pg_catalog.pg_stat_get_wal_receiver();
+
+"SELECT 
+timeline -> CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE ('x' || pg_catalog.substr(pg_catalog.pg_walfile_name(pg_catalog.pg_current_wal_lsn()), 1, 8))::bit(32)::int END, 
+wal_position -> CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_current_wal_flush_lsn(), '0/0')::bigint END, 
+replayed_location -> pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_last_wal_replay_lsn(), '0/0')::bigint, 
+received_location -> pg_catalog.pg_wal_lsn_diff(COALESCE(pg_catalog.pg_last_wal_receive_lsn(), '0/0'), '0/0')::bigint, 
+replay_paused -> pg_catalog.pg_is_in_recovery() AND pg_catalog.pg_is_wal_replay_paused(), 
+pg_control_timeline -> 0, 
+received_tli -> CASE WHEN latest_end_lsn IS NULL THEN NULL ELSE received_tli END, 
+slot_name -> slot_name, 
+conninfo -> conninfo, 
+receiver_state -> status, 
+restore_command -> pg_catalog.current_setting('restore_command'), 
+slots -> (SELECT pg_catalog.json_agg(s.*) FROM (SELECT slot_name, slot_type as type, datoid::bigint, plugin, catalog_xmin, pg_catalog.pg_wal_lsn_diff(confirmed_flush_lsn, '0/0')::bigint AS confirmed_flush_lsn, pg_catalog.pg_wal_lsn_diff(restart_lsn, '0/0')::bigint AS restart_lsn FROM pg_catalog.pg_get_replication_slots()) AS s), 
+synchronous_commit -> 'on', 
+synchronous_standby_names -> '', 
+pg_stat_replication -> NULL FROM pg_catalog.pg_stat_get_wal_receiver()"
+(1, 25540112, None, 0, False, 0, None, None, None, None, '', None, 'on', '', ...)
+
+SET log_statement TO none
+SET log_min_duration_statement TO -1
+SET log_min_error_statement TO 'log'
+SET pg_stat_statements.track_utility to 'off'
+'DO $$\nBEGIN\n    SET local synchronous_commit = \'local\';\n    PERFORM * FROM pg_catalog.pg_authid WHERE rolname = \'postgres\';\n    IF FOUND THEN\n        ALTER ROLE "postgres" WITH SUPERUSER LOGIN PASSWORD \'Yanfa1304\';\n    ELSE\n        CREATE ROLE "postgres" WITH SUPERUSER LOGIN PASSWORD \'Yanfa1304\';\n    END IF;\nEND;$$'
+RESET log_min_error_statement
+RESET log_min_duration_statement
+RESET log_statement
+RESET pg_stat_statements.track_utility
+
+'DO $$\nBEGIN\n    SET local synchronous_commit = \'local\';\n    GRANT EXECUTE ON function pg_catalog.pg_ls_dir(text, boolean, boolean) TO "rewind_user";\nEND;$$'
+'DO $$\nBEGIN\n    SET local synchronous_commit = \'local\';\n    GRANT EXECUTE ON function pg_catalog.pg_stat_file(text, boolean) TO "rewind_user";\nEND;$$'
+'DO $$\nBEGIN\n    SET local synchronous_commit = \'local\';\n    GRANT EXECUTE ON function pg_catalog.pg_read_binary_file(text) TO "rewind_user";\nEND;$$'
+'DO $$\nBEGIN\n    SET local synchronous_commit = \'local\';\n    GRANT EXECUTE ON function pg_catalog.pg_read_binary_file(text, bigint, bigint, boolean) TO "rewind_user";\nEND;$$'
+
+复制槽:
+SELECT slot_name, slot_type, pg_catalog.pg_wal_lsn_diff(restart_lsn, '0/0')::bigint, plugin, database, datoid, catalog_xmin, pg_catalog.pg_wal_lsn_diff(confirmed_flush_lsn, '0/0')::bigint FROM pg_catalog.pg_replication_slots WHERE NOT temporary;
+
+WITH slots AS (SELECT slot_name, active FROM pg_catalog.pg_replication_slots WHERE slot_name = 'postgresql2'), dropped AS (SELECT pg_catalog.pg_drop_replication_slot(slot_name), true AS dropped FROM slots WHERE not active) SELECT active, COALESCE(dropped, false) FROM slots FULL OUTER JOIN dropped ON true;
+
+"SELECT pg_catalog.pg_create_physical_replication_slot('postgresql2', true) WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_replication_slots WHERE slot_type = 'physical' AND slot_name = 'postgresql2')"
+
+
+"SELECT pg_catalog.pg_postmaster_start_time(), CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE ('x' || pg_catalog.substr(pg_catalog.pg_walfile_name(pg_catalog.pg_current_wal_lsn()), 1, 8))::bit(32)::int END, CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_current_wal_flush_lsn(), '0/0')::bigint END, pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_last_wal_replay_lsn(), '0/0')::bigint, pg_catalog.pg_wal_lsn_diff(COALESCE(pg_catalog.pg_last_wal_receive_lsn(), '0/0'), '0/0')::bigint, pg_catalog.pg_is_in_recovery() AND pg_catalog.pg_is_wal_replay_paused(), pg_catalog.pg_last_xact_replay_timestamp(), (pg_catalog.pg_stat_get_wal_receiver()).status, pg_catalog.current_setting('restore_command'), pg_catalog.array_to_json(pg_catalog.array_agg(pg_catalog.row_to_json(ri))) FROM (SELECT (SELECT rolname FROM pg_catalog.pg_authid WHERE oid = usesysid) AS usename, application_name, client_addr, w.state, sync_state, sync_priority FROM pg_catalog.
+pg_stat_get_wal_senders() w, pg_catalog.pg_stat_get_activity(pid)) AS ri"
+
+checkpoint:
+SET statement_timeout = 0
+CHECKPOINT
+
+配置:
+SELECT name, setting, unit, vartype, context, sourcefile FROM pg_catalog.pg_settings  WHERE pg_catalog.lower(name) = ANY(ARRAY[['wal_level', 'max_connections', 'max_wal_senders', 'max_prepared_transactions', 'max_locks_per_transaction', 'track_commit_timestamp', 'max_replication_slots', 'max_worker_processes', 'wal_log_hints', 'unix_socket_directories', 'cluster_name', 'listen_addresses', 'port', 'wal_keep_segments']])
+SELECT name, pg_catalog.current_setting(name), unit, vartype FROM pg_catalog.pg_settings WHERE pg_catalog.lower(name) != ALL(ARRAY['archive_cleanup_command', 'pause_at_recovery_target', 'primary_conninfo', 'primary_slot_name', 'promote_trigger_file', 'recovery_end_command', 'recovery_min_apply_delay', 'recovery_target', 'recovery_target_action', 'recovery_target_inclusive', 'recovery_target_lsn', 'recovery_target_name', 'recovery_target_time', 'recovery_target_timeline', 'recovery_target_xid', 'restore_command', 'standby_mode', 'trigger_file', 'hot_standby']) AND pending_restart'
+
+//////////////////////////////////////////////
+
+IDENTIFY_SYSTEM

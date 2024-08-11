@@ -1,0 +1,25 @@
+call, ['initdb', '--encoding=UTF8', '--data-checksums', '--username=postgres', '--pwfile=C:\\Users\\lidong6.RD\\AppData\\Local\\Temp\\tmpl7l4vg1t', 'F:/ruanjian/project/github/postgres/etcd/data1/pg']
+
+checkout_output, ['pg_controldata', 'F:/ruanjian/project/github/postgres/etcd/data1/pg']
+checkout_output, ['postgres', '--describe-config']
+
+call, ['pg_isready', '-p', '5301', '-d', 'postgres', '-h', 'localhost', '-U', 'postgres']
+
+popen, ['postgres', '-D', 'F:/ruanjian/project/github/postgres/etcd/data1/pg', '--config-file=F:\\ruanjian\\project\\github\\postgres\\etcd\\data1\\pg\\postgresql.conf', '--listen_addresses=0.0.0.0', '--port=5301', '--cluster_name=batman', '--wal_level=replica', '--hot_standby=on', '--max_connections=100', '--max_wal_senders=10', '--max_prepared_transactions=0', '--max_locks_per_transaction=64', '--track_commit_timestamp=off', '--max_replication_slots=10', '--max_worker_processes=8', '--wal_log_hints=on']
+
+checkout_output, ['postgres', '-D', 'F:/ruanjian/project/github/postgres/etcd/data1/pg', '-C', 'archive_mode', '--config-file=F:\\ruanjian\\project\\github\\postgres\\etcd\\data1\\pg\\postgresql.conf'], off
+checkout_output, ['postgres', '-D', 'F:/ruanjian/project/github/postgres/etcd/data1/pg', '-C', 'archive_command', '--config-file=F:\\ruanjian\\project\\github\\postgres\\etcd\\data1\\pg\\postgresql.conf'], 
+
+cancellable, ['postgres', '--single', '-D', 'F:/ruanjian/project/github/postgres/etcd/data1/pg', '-c', 'archive_command=false', '-c', 'archive_mode=on', '-c', 'cluster_name=batman', '-c', 'config-file=F:\\\\ruanjian\\\\project\\\\github\\\\postgres\\\\etcd\\\\data1\\\\pg\\\\postgresql.conf', '-c', 'hot_standby=on', '-c', 'listen_addresses=0.0.0.0', '-c', 'max_connections=100', '-c', 'max_locks_per_transaction=64', '-c', 'max_prepared_transactions=0', '-c', 'max_replication_slots=10', '-c', 'max_wal_senders=10', '-c', 'max_worker_processes=8', '-c', 'port=5301', '-c', 'track_commit_timestamp=off', '-c', 'wal_level=replica', '-c', 'wal_log_hints=on', 'template1']
+
+call, ['pg_ctl', 'promote', '-D', 'F:/ruanjian/project/github/postgres/etcd/data1/pg', '-W'], 0
+
+pg_isready -p 5301 -d postgres -h localhost -U postgres
+
+['pg_ctl', 'kill', 'INT', '15860']
+
+['pg_waldump', '-t', '4', '-s', '0/6000148', '-n', '1']
+rmgr: XLOG        len (rec/tot):    114/   114, tx:          0, lsn: 0/06000148, prev 0/06000110, desc: CHECKPOINT_SHUTDOWN redo 0/6000148; tli 4; prev tli 4; fpw true; xid 0:494; oid 16386; multi 1; offset 0; oldest xid 480 in DB 1; oldest multi 1 in DB 1; oldest/newest commit timestamp xid: 0/0; oldest running xid 0; shutdown
+
+
+ ['postgres', '-D', 'F:/ruanjian/project/github/postgres/etcd/data1/pg', '-C', 'hba_file', '--config-file=F:\\ruanjian\\project\\github\\postgres\\etcd\\data1\\pg\\postgresql.conf'], F:/ruanjian/project/github/postgres/etcd/data1/pg/pg_hba.conf
