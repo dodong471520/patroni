@@ -29,6 +29,7 @@ class CancellableExecutor(object):
             self._process_children = []
             self._process_cmd = cmd
             self._process = psutil.Popen(cmd, *args, **kwargs)
+            logger.info("@@@ Popen: %s, %s", str(cmd), str(self._process.pid))
         except Exception:
             return logger.exception('Failed to execute %s', cmd)
         return True

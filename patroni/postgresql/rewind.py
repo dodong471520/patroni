@@ -56,6 +56,7 @@ class Rewind(object):
         cmd = [self._postgresql.pgcommand('pg_rewind'), '--help']
         try:
             ret = subprocess.call(cmd, stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+            logger.info("@@@ call, can_rewind: %s, %d", str(cmd), ret)
             if ret != 0:  # pg_rewind is not there, close up the shop and go home
                 return False
         except OSError:

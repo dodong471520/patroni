@@ -71,6 +71,7 @@ class NamedConnection:
         try:
             with self.get().cursor() as cursor:
                 cursor.execute(sql.encode('utf-8'), params or None)
+                logger.info("### query: %s, params: %s, result: %s", sql.encode('utf-8'), params, cursor.rowcount)
                 return cursor.fetchall() if cursor.rowcount and cursor.rowcount > 0 else []
         except psycopg.Error as exc:
             if cursor and cursor.connection.closed == 0:

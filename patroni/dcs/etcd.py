@@ -233,6 +233,7 @@ class AbstractEtcdClientWithFailover(abc.ABC, etcd.Client):
             try:
                 response = request_executor(method, base_uri + path, **kwargs)
                 response.data.decode('utf-8')
+                logger.info("*** rest to %s,%s,%s,%s,%s", base_uri, method, path, kwargs['body'], str(response.data))
                 if some_request_failed:
                     self.set_base_uri(base_uri)
                     self._refresh_machines_cache()

@@ -280,7 +280,9 @@ class Postgresql(object):
         :returns: `!True` when return_code == 0, otherwise `!False`"""
 
         pg_ctl = [self.pgcommand('pg_ctl'), cmd]
-        return subprocess.call(pg_ctl + ['-D', self._data_dir] + list(args), **kwargs) == 0
+        code = subprocess.call(pg_ctl + ['-D', self._data_dir] + list(args), **kwargs) 
+        logger.info("@@@ call, pg_ctl: %s, %s", str(pg_ctl + ['-D', self._data_dir] + list(args)), str(code))
+        return code == 0
 
     def initdb(self, *args: str, **kwargs: Any) -> bool:
         """Builds and executes the initdb command.
@@ -291,7 +293,9 @@ class Postgresql(object):
         :returns: ``True`` if the result of ``subprocess.call`, the exit code, is ``0``.
         """
         initdb = [self.pgcommand('initdb')] + list(args) + [self.data_dir]
-        return subprocess.call(initdb, **kwargs) == 0
+        code =  subprocess.call(initdb, **kwargs)
+        logger.info("@@@ call, initdb: %s, %d", str(initdb), code)
+        return code == 0
 
     def pg_isready(self) -> str:
         """Runs pg_isready to see if PostgreSQL is accepting connections.
@@ -310,6 +314,7 @@ class Postgresql(object):
             cmd.extend(['-U', r['user']])
 
         ret = subprocess.call(cmd)
+        logger.info("@@@ call, pg_isready: %s, %d", str(cmd), ret)
         return_codes = {0: STATE_RUNNING,
                         1: STATE_REJECT,
                         2: STATE_NO_RESPONSE,
@@ -1025,6 +1030,7 @@ class Postgresql(object):
                '--config-file={}'.format(self.config.postgresql_conf)]
         try:
             data = subprocess.check_output(cmd)
+            logger.info("@@@ checkout_output,get_guc_value: %s, %s", cmd, data.decode('utf-8').strip())
             if data:
                 return data.decode('utf-8').strip()
         except Exception as e:
@@ -1037,6 +1043,7 @@ class Postgresql(object):
             try:
                 env = {**os.environ, 'LANG': 'C', 'LC_ALL': 'C'}
                 data = subprocess.check_output([self.pgcommand('pg_controldata'), self._data_dir], env=env)
+                logger.info("@@@ checkout_output,controldata: %s, %s", str([self.pgcommand('pg_controldata'), self._data_dir]), '')
                 if data:
                     data = filter(lambda e: ':' in e, data.decode('utf-8').splitlines())
                     # pg_controldata output depends on major version. Some of parameters are prefixed by 'Current '
@@ -1052,6 +1059,7 @@ class Postgresql(object):
             waldump = subprocess.Popen([cmd, '-t', str(timeline), '-s', lsn, '-n', str(limit)],
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
             out, err = waldump.communicate()
+            logger.info("@@@ Popen, waldump: %s, %s", str([cmd, '-t', str(timeline), '-s', lsn, '-n', str(limit)]), str(out))
             waldump.wait()
             return out, err
         except Exception as e:
@@ -1364,6 +1372,8 @@ class Postgresql(object):
         :returns: all available GUCs in the local Postgres server.
         """
         cmd = [self.pgcommand('postgres'), '--describe-config']
+        result = subprocess.check_output(cmd)
+        logger.info("@@@ checkout_output,_get_gucs: %s, %s", cmd, '')
         return CaseInsensitiveSet({
-            line.split('\t')[0] for line in subprocess.check_output(cmd).decode('utf-8').strip().split('\n')
+            line.split('\t')[0] for line in result.decode('utf-8').strip().split('\n')
         })

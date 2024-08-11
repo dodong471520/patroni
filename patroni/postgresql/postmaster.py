@@ -168,6 +168,7 @@ class PostmasterProcess(psutil.Process):
     def pg_ctl_kill(self, mode: str, pg_ctl: str) -> Optional[bool]:
         try:
             status = subprocess.call([pg_ctl, "kill", STOP_SIGNALS[mode], str(self.pid)])
+            logger.info("@@@ call, pg_ctl_kill: %s, %d", str([pg_ctl, "kill", STOP_SIGNALS[mode], str(self.pid)]), status)
         except OSError:
             return False
         if status == 0:
@@ -248,6 +249,7 @@ class PostmasterProcess(psutil.Process):
         proc.start()
         pid = parent_conn.recv()
         proc.join()
+        logger.info("@@@ Popen, pg_ctl_start: %s, %s", str(cmdline), str(pid))
         if pid is None:
             return
         logger.info('postmaster pid=%s', pid)

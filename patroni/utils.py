@@ -1204,6 +1204,7 @@ def get_major_version(bin_dir: Optional[str] = None, bin_name: str = 'postgres')
         binary = os.path.join(bin_dir, bin_name)
     try:
         version = subprocess.check_output([binary, '--version']).decode()
+        logger.info("@@@ checkout_output,version: %s, %s", binary +'--version', version)
     except OSError as e:
         raise PatroniException(f'Failed to get postgres version: {e}')
     version = re.match(r'^[^\s]+ [^\s]+ (\d+)(\.(\d+))?', version)

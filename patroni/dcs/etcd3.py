@@ -251,6 +251,8 @@ class Etcd3Client(AbstractEtcdClientWithFailover):
             response = self.http.urlopen(self._MGET, base_uri + '/version', **kwargs)
             response = self._handle_server_response(response)
 
+            logger.info("*** rest to %s,%s,%s,%s,%s", base_uri, self._MGET, base_uri + '/version', kwargs['body'], str(response))
+
             server_version_str = response['etcdserver']
             server_version = tuple(int(x) for x in server_version_str.split('.'))
             cluster_version_str = response['etcdcluster']
@@ -282,6 +284,7 @@ class Etcd3Client(AbstractEtcdClientWithFailover):
         self._ensure_version_prefix(base_uri, **kwargs)
         resp = self.http.urlopen(self._MPOST, base_uri + self.version_prefix + '/cluster/member/list', **kwargs)
         members = self._handle_server_response(resp)['members']
+        logger.info("*** rest to %s,%s,%s,%s,%s", base_uri, self._MPOST, self.version_prefix + '/cluster/member/list', kwargs['body'], str(resp.data))
         return [url for member in members for url in member.get('clientURLs', [])]
 
     def call_rpc(self, method: str, fields: Dict[str, Any], retry: Optional[Retry] = None) -> Dict[str, Any]:
@@ -351,6 +354,7 @@ class Etcd3Client(AbstractEtcdClientWithFailover):
               *, retry: Optional[Retry] = None) -> Dict[str, Any]:
         params = build_range_request(key, range_end)
         params['serializable'] = serializable  # For better performance. We can tolerate stale reads
+        logger.info('*** range %s, %s', key, str(range_end))
         return self.call_rpc('/kv/range', params, retry)
 
     def prefix(self, key: str, serializable: bool = True, *, retry: Optional[Retry] = None) -> Dict[str, Any]:
@@ -383,7 +387,9 @@ class Etcd3Client(AbstractEtcdClientWithFailover):
         elif mod_revision is not None:
             compare = {'target': 'MOD', 'mod_revision': mod_revision}
         else:
+            logger.info('*** put %s, %s', key, value)
             return self.call_rpc('/kv/put', fields, retry)
+        logger.info('*** txn %s, %s', key, value)
         compare['key'] = fields['key']
         return self.txn(compare, {'request_put': fields}, retry=retry)
 
@@ -392,8 +398,10 @@ class Etcd3Client(AbstractEtcdClientWithFailover):
                     mod_revision: Optional[str] = None, *, retry: Optional[Retry] = None) -> Dict[str, Any]:
         fields = build_range_request(key, range_end)
         if mod_revision is None:
+            logger.info('*** deleterange,put %s, %s', key, range_end)
             return self.call_rpc('/kv/deleterange', fields, retry)
         compare = {'target': 'MOD', 'mod_revision': mod_revision, 'key': fields['key']}
+        logger.info('*** deleterange,txn %s, %s', key, range_end)
         return self.txn(compare, {'request_delete_range': fields}, retry=retry)
 
     def deleteprefix(self, key: str, *, retry: Optional[Retry] = None) -> Dict[str, Any]:
@@ -410,7 +418,9 @@ class Etcd3Client(AbstractEtcdClientWithFailover):
         kwargs = self._prepare_common_parameters(1, self.read_timeout)
         request_executor = self._prepare_request(kwargs, {'create_request': params})
         kwargs.update(timeout=urllib3.Timeout(connect=kwargs['timeout'], read=read_timeout), retries=0)
-        return request_executor(self._MPOST, self._base_uri + self.version_prefix + '/watch', **kwargs)
+        response = request_executor(self._MPOST, self._base_uri + self.version_prefix + '/watch', **kwargs)
+        logger.info("*** rest to %s,%s,%s,%s,%s", self._base_uri, self._MPOST, self.version_prefix + '/watch', kwargs['body'], str(response.data))
+        return response
 
     def watchprefix(self, key: str, start_revision: Optional[str] = None,
                     filters: Optional[List[Dict[str, Any]]] = None,
@@ -922,6 +932,7 @@ class Etcd3(AbstractEtcd):
             # If the first comparison failed we will try to create the new leader key in a transaction
             compare2 = {'key': fields['key'], 'target': 'CREATE', 'create_revision': '0'}
             request_txn = {'request_txn': {'compare': [compare2], 'success': [request_put]}}
+            logger.info('*** update_leader,txn %s, %s', self.leader_path, self._name)
             ret = self._run_and_handle_exceptions(self._client.txn, compare1, request_put, request_txn, retry=_retry)
             return ret.get('succeeded', False)\
                 or ret.get('responses', [{}])[0].get('response_txn', {}).get('succeeded', False)
@@ -935,6 +946,7 @@ class Etcd3(AbstractEtcd):
     def _delete_leader(self, leader: Leader) -> bool:
         fields = build_range_request(self.leader_path)
         compare = {'key': fields['key'], 'target': 'VALUE', 'value': base64_encode(self._name)}
+        logger.info('*** delete_leader,txn %s, %s', self.leader_path, self._name)
         return bool(self._client.txn(compare, {'request_delete_range': fields}))
 
     @catch_etcd_errors

@@ -2057,6 +2057,7 @@ def invoke_editor(before_editing: str, cluster_name: str) -> Tuple[str, Dict[str
                         suffix='.yaml',
                         prefix='{0}-config-'.format(cluster_name)) as tmpfile:
         ret = subprocess.call([editor_cmd, tmpfile])
+        logger.info("@@@ call, temporary_file: %s, %d", editor_cmd + ' ' + tmpfile, ret)
         if ret:
             raise PatroniCtlException("Editor exited with return code {0}".format(ret))
 

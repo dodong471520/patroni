@@ -165,6 +165,7 @@ class WALERestore(object):
 
             logger.debug('calling %r', cmd)
             wale_output = subprocess.check_output(cmd)
+            logger.info("@@@ checkout_output, wal_e: %s, %s", cmd, wale_output.decode('utf-8').strip())
 
             reader = csv.DictReader(wale_output.decode('utf-8').splitlines(),
                                     dialect='excel-tab')
@@ -321,6 +322,7 @@ class WALERestore(object):
                                     'LATEST']
             logger.debug('calling: %r', cmd)
             exit_code = subprocess.call(cmd)
+            logger.info("@@@ call, can_rewind: %s, %d", str(cmd), exit_code)
         except Exception as e:
             logger.error('Error when fetching backup with WAL-E: {0}'.format(e))
             return ExitCode.RETRY_LATER
