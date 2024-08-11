@@ -53,7 +53,14 @@ promote
 
 restaring:
 state: restarting
-stop, start, 
+restart, stop, start
 
 switchover:
 demote, follow, 
+
+reinitiate:
+stop, clone, follow, start
+role: creating replica, stopped,
+
+pause:
+demote, stop, follow, start

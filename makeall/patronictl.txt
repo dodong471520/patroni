@@ -1,0 +1,20 @@
+python -m debugpy --wait-for-client --listen 5683 patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml query batman -U postgres --password -r replica -c "SHOW port"
+python -m debugpy --listen 5683 patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml pause batman --wait
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml query batman -U postgres --password -m postgresql2 -c "SHOW port"
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml query batman -U postgres --password -c "SELECT now()"
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml history batman
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml flush batman postgresql1 restart --force
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml flush batman postgresql1 switchover --force
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml resume batman --wait
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml pause batman --wait
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml reinit batman postgresql1 --wait --force
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml reload  batman postgresql1 --force
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml remove batman
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml failover --candidate postgresql1  --force
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml restart batman postgresql1 --force
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml switchover --candidate postgresql2 --force
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml topology batman
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml version batman
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml list
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml dsn batman
+python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml show-config

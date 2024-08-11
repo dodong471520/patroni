@@ -53,21 +53,29 @@ RESET pg_stat_statements.track_utility
 复制槽:
 SELECT slot_name, slot_type, pg_catalog.pg_wal_lsn_diff(restart_lsn, '0/0')::bigint, plugin, database, datoid, catalog_xmin, pg_catalog.pg_wal_lsn_diff(confirmed_flush_lsn, '0/0')::bigint FROM pg_catalog.pg_replication_slots WHERE NOT temporary;
 
+丢弃复制槽:
 WITH slots AS (SELECT slot_name, active FROM pg_catalog.pg_replication_slots WHERE slot_name = 'postgresql2'), dropped AS (SELECT pg_catalog.pg_drop_replication_slot(slot_name), true AS dropped FROM slots WHERE not active) SELECT active, COALESCE(dropped, false) FROM slots FULL OUTER JOIN dropped ON true;
 
+创建物理复制槽:
 "SELECT pg_catalog.pg_create_physical_replication_slot('postgresql2', true) WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_replication_slots WHERE slot_type = 'physical' AND slot_name = 'postgresql2')"
 
-
+查看日志信息:
 "SELECT pg_catalog.pg_postmaster_start_time(), CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE ('x' || pg_catalog.substr(pg_catalog.pg_walfile_name(pg_catalog.pg_current_wal_lsn()), 1, 8))::bit(32)::int END, CASE WHEN pg_catalog.pg_is_in_recovery() THEN 0 ELSE pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_current_wal_flush_lsn(), '0/0')::bigint END, pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_last_wal_replay_lsn(), '0/0')::bigint, pg_catalog.pg_wal_lsn_diff(COALESCE(pg_catalog.pg_last_wal_receive_lsn(), '0/0'), '0/0')::bigint, pg_catalog.pg_is_in_recovery() AND pg_catalog.pg_is_wal_replay_paused(), pg_catalog.pg_last_xact_replay_timestamp(), (pg_catalog.pg_stat_get_wal_receiver()).status, pg_catalog.current_setting('restore_command'), pg_catalog.array_to_json(pg_catalog.array_agg(pg_catalog.row_to_json(ri))) FROM (SELECT (SELECT rolname FROM pg_catalog.pg_authid WHERE oid = usesysid) AS usename, application_name, client_addr, w.state, sync_state, sync_priority FROM pg_catalog.
 pg_stat_get_wal_senders() w, pg_catalog.pg_stat_get_activity(pid)) AS ri"
 
-checkpoint:
+设置检查点:
 SET statement_timeout = 0
 CHECKPOINT
 
-配置:
+查看配置:
 SELECT name, setting, unit, vartype, context, sourcefile FROM pg_catalog.pg_settings  WHERE pg_catalog.lower(name) = ANY(ARRAY[['wal_level', 'max_connections', 'max_wal_senders', 'max_prepared_transactions', 'max_locks_per_transaction', 'track_commit_timestamp', 'max_replication_slots', 'max_worker_processes', 'wal_log_hints', 'unix_socket_directories', 'cluster_name', 'listen_addresses', 'port', 'wal_keep_segments']])
 SELECT name, pg_catalog.current_setting(name), unit, vartype FROM pg_catalog.pg_settings WHERE pg_catalog.lower(name) != ALL(ARRAY['archive_cleanup_command', 'pause_at_recovery_target', 'primary_conninfo', 'primary_slot_name', 'promote_trigger_file', 'recovery_end_command', 'recovery_min_apply_delay', 'recovery_target', 'recovery_target_action', 'recovery_target_inclusive', 'recovery_target_lsn', 'recovery_target_name', 'recovery_target_time', 'recovery_target_timeline', 'recovery_target_xid', 'restore_command', 'standby_mode', 'trigger_file', 'hot_standby']) AND pending_restart'
+
+是否在恢复模式:
+SELECT pg_catalog.pg_is_in_recovery()
+
+显示端口:
+SHOW port
 
 //////////////////////////////////////////////
 

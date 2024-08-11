@@ -56,3 +56,6 @@ GET:/liveness
 
 
 
+POST:/v3/kv/txn
+{"compare": [{"target": "MOD", "mod_revision": "2710", "key": "/service/batman/config,"}], "success": [{"request_put": {"key": "/service/batman/config,", "value": "{"ttl":30,"loop_wait":10,"retry_timeout":10,"maximum_lag_on_failover":1048576,"postgresql":{"use_pg_rewind":true,"pg_hba":["host replication replicator 0.0.0.0/0 md5","host all all 0.0.0.0/0 md5"],"parameters":null},"pause":true}"}}]}
+{"header":{"cluster_id":"9553880798918875112","member_id":"708162861580590150","revision":"2779","raft_term":"11"},"succeeded":true,"responses":[{"response_put":{"header":{"revision":"2779"}}}]}

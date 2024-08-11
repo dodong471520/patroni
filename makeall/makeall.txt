@@ -20,18 +20,6 @@ runas /trustlevel:0x20000 "python -m debugpy --listen 5681 patroni.py F:/ruanjia
 runas /trustlevel:0x20000 "python -m debugpy --listen 5682 patroni.py F:/ruanjian/project/github/postgres/etcd/conf/postgres2.yml"
 runas /trustlevel:0x20000 "python -m debugpy --wait-for-client --listen 5681 patroni.py F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml"
 
-python -m debugpy --wait-for-client --listen 5683 patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml reload  batman postgresql1 --force
-python -m debugpy --listen 5683 patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml switchover --candidate postgresql1  --force
-python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml remove batman
-python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml failover --candidate postgresql1  --force
-python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml restart batman postgresql1 --force
-python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml switchover --candidate postgresql2 --force
-python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml topology batman
-python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml version batman
-python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml list
-python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml dsn batman
-python patronictl.py -c F:/ruanjian/project/github/postgres/etcd/conf/postgres1.yml show-config
-
 ///////////////////////////////////////////
 Patroni
 Watchdog
@@ -117,6 +105,5 @@ check_timeline
 ## list
 ## replica, master, standby, 
 ## running, restarting, starting
-## switchover,failover, remove
-时间线不同, lsn 不同, checkpoint 不同
-query,reload,reinit,flush,pause,resume,history
+## switchover,failover, remove, reload, reinit,pause,resume
+时间线不同, lsn 不同, checkpoint 不同, history
